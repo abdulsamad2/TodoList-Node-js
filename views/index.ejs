@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="flex">
+    <div class="container">
+      <h1>Add To do's</h1>
+      <form method="POST" action="/" id="todo-form">
+        <input
+          name="name"
+          type="text"
+          id="task-title"
+          placeholder="Task Title"
+          required
+        />
+        <input
+          name="description"
+          type="text"
+          id="task-desc"
+          placeholder="Task Description"
+          required
+        />
+        <input
+          name="date"
+          type="date"
+          id="task-date"
+          placeholder="Task Date"
+          required
+        />
+        <button type="submit">Add Task</button>
+      </form>
+    </div>
+    <div class="container">
+      <h1>To-Do List</h1>
+      <ul id="todo-list">
+        <% todos.forEach(todo => { %>
+        <li class="<%= todo.completed ? 'completed' : '' %>">
+          <div class="task-details">
+            <p class="task-title"><%= todo.name %></p>
+            <p class="task-desc"><%= todo.description %></p>
+            <p class="task-date">
+              Due: <%= Date(todo.date).toString().slice(0, 15) %>
+            </p>
+          </div>
+          <div class="task-actions">
+            <% if (!todo.completed) { %>
+            <button
+              type="button"
+              data-id="<%= todo._id %>"
+              class="complete-btn"
+              onclick="markComplete('<%= todo._id %>')"
+            >
+              Mark Complete
+            </button>
+            <% } %>
+
+            <button class="delete-btn" onclick="deleteTask('<%= todo._id %>')">
+              Delete
+            </button>
+            <% if (todo.completed) { %>
+            <button
+              class="uncomplete-btn"
+              onclick="markunComplete('<%= todo._id %>')"
+            >
+              mark unComplete
+            </button>
+            <% } %>
+          </div>
+        </li>
+        <% }) %>
+      </ul>
+    </div>
+    <script>
+      function markComplete(id) {
+        fetch("/" + id, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ completed: true }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              const listItem = document
+                .querySelector(`[data-id='${id}']`)
+                .closest("li");
+              listItem.classList.add("completed");
+            } else {
+              console.error("Failed to mark as complete:", response.statusText);
+            }
+          })
+          .catch((error) => console.error("Error:", error))
+          .finally(() => {
+            window.location.href = "/";
+          });
+      }
+
+      function deleteTask(id) {
+        fetch("/" + id + "?_method=DELETE", {
+          method: "DELETE",
+        })
+          .then((response) => {
+            if (response.ok) {
+              window.location.href = "/"; // Change this to your desired URL
+            } else {
+              console.error("Failed to delete task:", response.statusText);
+            }
+          })
+          .catch((error) => console.error("Error:", error))
+          .finally(() => {
+            window.location.href = "/";
+          });
+      }
+      function markunComplete(id) {
+        fetch("/" + id, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ completed: false }), // Set completed to false for uncompletion
+        })
+          .then((response) => {
+            if (response.ok) {
+              const listItem = document
+                .querySelector(`[data-id='${id}']`)
+                .closest("li");
+              listItem.classList.remove("completed"); // Remove 'completed' class to visually uncomplete the task
+            } else {
+              console.error(
+                "Failed to mark as uncomplete:",
+                response.statusText
+              );
+            }
+          })
+          .catch((error) => console.error("Error:", error))
+          .finally(() => {
+            window.location.href = "/";
+          });
+      }
+    </script>
+  </body>
+</html>
